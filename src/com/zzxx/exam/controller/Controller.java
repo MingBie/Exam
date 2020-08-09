@@ -88,8 +88,8 @@ public class Controller {
         examFrame.updateExamInfo(examInfo); // 更新考试信息
         timeLimit = examInfo.getTimeLimit(); // 获得考试的时间
         time(); // 更新时间
-        //timeCountDown(); // 倒计时
-        timer();
+        timeCountDown(); // 倒计时(线程)
+        //timer(); // 倒计时(线程)
     }
     // 倒计时(线程)
     private void timeCountDown() {
