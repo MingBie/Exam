@@ -231,18 +231,22 @@ public class EntityContext {
         }
     }
 
+
+
     // 查找对应id的User用户
     public User findUserById(int id) {
         return usersMap.get(id);
     }
+
     // 查找对应level的题目集合
     public List<Question> findQuestionByLevel(int level) {
         // 对应难度级别的题目集合
         List<Question> questions = questionsMap.get(level);
         return questions;
     }
+
     // 获取考试规则
     public String getRules() {
-        return rules;
+            return rules;
     }
 }

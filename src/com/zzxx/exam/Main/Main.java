@@ -30,6 +30,8 @@ public class Main {
         loginFrame.setController(controller);
         menuFrame.setController(controller);
         examFrame.setController(controller);
+        resultFrame.setController(controller);
+        msgFrame.setController(controller);
         // 主程序开始
         controller.startMain();
     }

@@ -107,6 +107,10 @@ public class LoginFrame extends JFrame {
     public JTextField getIdField() {
         return idField;
     }
+    // 给控制台调用 重新登入时清空编号
+    public void updataIdField(String idField) {
+        this.idField.setText(idField);
+    }
     private JPanel createIdPane() {
         JPanel p = new JPanel(new BorderLayout(6, 0));
         p.add(BorderLayout.WEST, new JLabel("编号:"));
@@ -126,6 +130,11 @@ public class LoginFrame extends JFrame {
     public JPasswordField getPwdField() {
         return pwdField;
     }
+
+    public void updataPwdField(String pwdField) {
+        this.pwdField.setText(pwdField);
+    }
+
     private JPanel createPwdPane() {
         JPanel p = new JPanel(new BorderLayout(6, 0));
         p.add(BorderLayout.WEST, new JLabel("密码:"));

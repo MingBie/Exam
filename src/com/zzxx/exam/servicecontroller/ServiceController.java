@@ -4,6 +4,7 @@ import com.zzxx.exam.entity.*;
 import com.zzxx.exam.idorpwdexecption.IdOrPwdException;
 import com.zzxx.exam.ui.ExamFrame;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -70,6 +71,38 @@ public class ServiceController {
     // 获得考试下标对应的题目
     public QuestionInfo getQuestionInfo(int questionIndex) {
         return this.examPaper.get(questionIndex);
+    }
+
+    // 获得考试成绩
+    public String getResult(File file) {
+        // 读取时把之前读取的 result清空
+        String result = new String();
+        StringBuilder sbResult = new StringBuilder(result);
+        BufferedReader br = null;
+        try {
+            // 创建缓冲字符输入流
+            br = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
+            String str;
+            // 依次读取换行
+            while ((str = br.readLine()) != null) {
+                sbResult.append(str + "\n");
+            }
+            result = sbResult.toString();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            // 关闭流
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return result;
     }
 
     // 显示考试规则

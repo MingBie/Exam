@@ -8,7 +8,10 @@ import com.zzxx.exam.idorpwdexecption.IdOrPwdException;
 import com.zzxx.exam.servicecontroller.ServiceController;
 import com.zzxx.exam.ui.*;
 
+import java.io.*;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 // 控制器
 public class Controller {
@@ -19,6 +22,9 @@ public class Controller {
     private WelcomeWindow welcomeWindow;
     private ResultFrame resultFrame;
     private ServiceController serviceController;
+
+    // 创建 考试成绩文件
+    File file = new File("src/com/zzxx/exam/util/result.txt");
 
     // 主程序开始方法
     public void startMain() {
@@ -42,10 +48,28 @@ public class Controller {
             //welcomeWindow.setVisible(false); // 0.5秒后 关闭欢迎界面
             menuFrame.setVisible(true); // 显示 登录后主界面
             menuFrame.updateInfo(user.getName() + " 同学你好！"); // 登录后更新提示的用户信息
-
+            // 重新登录时 清空考试成绩
+            deleteResult(file);
+            resultFrame.updateScore(result);
         } catch (IdOrPwdException e) {
             // 如果输入错误 显示 编号/密码输入错误
             loginFrame.updateMessage(e.getMessage());
+        }
+    }
+    private void deleteResult(File file) {
+        PrintWriter pr = null;
+        try {
+            // 创建缓冲字符输出流
+            // 写入一个空 并覆盖之前的内容
+            pr = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file)));
+            pr.print("");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } finally {
+            // 关闭流
+            if (pr != null) {
+                pr.close();
+            }
         }
     }
 
@@ -64,7 +88,8 @@ public class Controller {
         examFrame.updateExamInfo(examInfo); // 更新考试信息
         timeLimit = examInfo.getTimeLimit(); // 获得考试的时间
         time(); // 更新时间
-        timeCountDown(); // 倒计时
+        //timeCountDown(); // 倒计时
+        timer();
     }
     // 倒计时(线程)
     private void timeCountDown() {
@@ -98,6 +123,26 @@ public class Controller {
         int second = timeLimit - hour * 3600 - minute * 60; // 秒
         examFrame.updateTime(hour, minute, second); // 更新时间
     }
+    // 倒计时(计时器)
+    private void timer() {
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                Controller.this.timeLimit --; // 时间减1
+                time(); // 更新时间
+                if (Controller.this.timeLimit == 0) {
+                    timer.cancel(); // 关闭定时器
+                    examFrame.setVisible(false); // 关闭 考试界面
+                    menuFrame.setVisible(true); // 打开 菜单界面
+                }
+            }
+        },1000,1000); // 延时1秒后开始
+        // 判断是否已交过卷 重新开始考试
+        if (menuFrame.getResult()) {
+            timer.cancel(); // 关闭之前一次考试的 计时器
+        }
+    }
 
     private int questionIndex = 0; // 题目下标
     private QuestionInfo questionInfo; // 包含用户答案选项的题目集合
@@ -125,17 +170,24 @@ public class Controller {
     // 交卷
     public void send() {
         this.questionInfo.setUserAnswers(examFrame.getUserAnswers()); // 保存(设置) 交卷时这一题的用户答案选项
+        // 1.批改考试成绩
+        // 2.把成绩存入 成绩文本中
+        correctExam();
         menuFrame.setVisible(true); // 显示 显示登录后主界面
         examFrame.setVisible(false); // 关闭 考试规则界面
         menuFrame.upDateResult(); // 更新 交卷按钮的属性
         //menuFrame.updateStart(); // 更新考试按钮(只能考一次试)
     }
-
-    // 显示分数
-    public void result() {
-        int score = 0;
-        // 判断是否 参加过考试
-        if (questionInfo != null) {
+    // 1.批改考试成绩
+    // 2.把成绩存入 成绩文本中
+    private void correctExam() {
+        PrintWriter pr = null;
+        try {
+            // 创建缓冲字符输出流
+            pr = new PrintWriter(new OutputStreamWriter(
+                    new FileOutputStream(file,true)));
+            int score = 0; // 分数
+            // 依次判断每道题是否答对
             for (int i = 0; i < 20; i++) {
                 questionInfo = serviceController.getQuestionInfo(i); // 获取 包含用户答案的题目
                 List<Integer> userAnswers = questionInfo.getUserAnswers(); // 用户答案
@@ -146,12 +198,26 @@ public class Controller {
                     score += questionInfo.getQuestion().getScore();
                 }
             }
-            resultFrame.updateScore(new String(user.getName() + "的成绩: " + score + ""));
-        } else {
-            resultFrame.updateScore(new String(user.getName() + " 未参加考试!"));
+            // 写入成绩在 成绩结果文件里
+            pr.println(new String(user.getName() + "的成绩: " + score + ""));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } finally {
+            // 关闭流
+            if (pr != null) {
+                pr.close();
+            }
         }
+    }
+
+    private String result; // 分数
+    // 显示分数
+    public void result() {
+        // 获取分数
+        result = serviceController.getResult(file);
         menuFrame.setVisible(false); // 关闭 显示登录后主界面
         resultFrame.setVisible(true); // 打开 分数页面
+        resultFrame.updateScore(result); // 更新分数
     }
 
     // 显示考试规则方法
@@ -166,6 +232,32 @@ public class Controller {
     public void exitMain() {
         // 强制退出程序
         System.exit(0);
+    }
+
+    // 考试成绩界面 返回主菜单
+    public void resultReturnMenu() {
+        resultFrame.setVisible(false); // 关闭 考试成绩界面
+        menuFrame.setVisible(true); // 显示 主菜单界面
+    }
+    // 考试成绩界面 返回登录界面
+    public void resultReturnLogin() {
+        resultFrame.setVisible(false); // 关闭考试成绩界面
+        loginFrame.setVisible(true); // 显示 登录界面
+        loginFrame.updataIdField(""); // 清空 登录界面编号
+        loginFrame.updataPwdField(""); // 清空登录界面密码
+    }
+
+    // 考试规则界面 返回 登录界面
+    public void msgReturnLogin() {
+        msgFrame.setVisible(false); // 关闭考试成绩界面
+        loginFrame.setVisible(true); // 显示 登录界面
+        loginFrame.updataIdField(""); // 清空 登录界面编号
+        loginFrame.updataPwdField(""); // 清空登录界面密码
+    }
+    // 考试规则界面 返回 主菜单界面
+    public void msgReturnMenu() {
+        msgFrame.setVisible(false); // 关闭 考试成绩界面
+        menuFrame.setVisible(true); // 显示 主菜单界面
     }
 
     // 给主函数用于 依赖 调用

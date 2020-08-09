@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class EntityContextTest {
+
     // 测试 加载用户信息方法(loadUsers)
     @Test
     public void Test01() {
@@ -21,6 +22,7 @@ public class EntityContextTest {
             System.out.println(usersMap.get(id).getPassword());
         }*/
     }
+
     // 测试 加载题目方法(loadQuestions)
     @Test
     public void Test02() {
@@ -35,6 +37,7 @@ public class EntityContextTest {
             }
         }*/
     }
+
     // 测试通过level查找对应难度级别的题目 并随机抽取两道
     @Test
     public void Test03() {
@@ -42,6 +45,7 @@ public class EntityContextTest {
         List<Question> que = ec.findQuestionByLevel(1);
         System.out.println(que);
     }
+
     // 测试读取考试规则方法(loadRule)
     @Test
     public void Test04() {
@@ -49,6 +53,7 @@ public class EntityContextTest {
         String rules = ec.getRules();
         System.out.println(rules);
     }
+
     // 测试读取考试信息方法(loadExamInfo)
     @Test
     public void Test05() {
